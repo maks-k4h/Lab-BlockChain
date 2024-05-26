@@ -18,16 +18,24 @@ class Block:
             prev_block: Optional['Block'] = None,
             transactions: Optional[MerkleTree] = None,
             timestamp: str = None,
-            nonce: int = 0
+            nonce: int = None
     ) -> None:
         self._prev_block = prev_block
         self._transactions = transactions if transactions is not None else MerkleTree()
         self._b64_miner = b64_miner
-        self._timestamp = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S") if timestamp is None else timestamp
+        self._timestamp = timestamp
         self._nonce = nonce
 
     def add_transaction(self, transaction: Transaction) -> None:
         self._transactions.add_transaction(transaction)
+
+    @property
+    def b64_miner(self) -> Optional[str]:
+        return self._b64_miner
+
+    @property
+    def transactions(self) -> List[Transaction]:
+        return self._transactions.transactions
 
     @property
     def prev_block(self) -> Optional['Block']:
@@ -49,25 +57,35 @@ class Block:
         return base64.b64encode(hashlib.sha256(s.encode()).digest()).decode()
 
     def mine(self, b64_miner: str) -> None:
-        assert not self.verify(check_pow=True), 'Block already mined!'
+        assert not self.is_mined
+        self._nonce = 0
+        self._timestamp = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
         self._b64_miner = b64_miner
-        while self.b64_hash[:COMPLEXITY] != '0' * COMPLEXITY:
+        while not self.is_proved:
             self._nonce += random.randint(0x1, 0xFF)  # random step
 
-    def verify(self, check_pow: bool = True) -> bool:
+    def verify(self) -> bool:
         # assuming previous blocks are valid, check the validity of current block
-        if check_pow and self.b64_hash[:COMPLEXITY] != '0' * COMPLEXITY:
+        if self.is_mined and not self.is_proved:
             return False
         if not self._transactions.verify():
             return False
         return True
 
+    @property
+    def is_mined(self) -> bool:
+        return self._b64_miner is not None
+
+    @property
+    def is_proved(self) -> bool:
+        return self.b64_hash[:COMPLEXITY] == '0' * COMPLEXITY
+
     def todict(self) -> Dict:
         return {
-            'hash': self.b64_hash,
-            'timestamp': self._timestamp,
-            'miner': self._b64_miner,
-            'nonce': self._nonce,
+            'hash': self.b64_hash if self.is_mined else None,
+            'timestamp': self._timestamp if self.is_mined else None,
+            'miner': self._b64_miner if self.is_mined else None,
+            'nonce': self._nonce if self.is_mined else None,
             'transactions': self._transactions.tolist(),
         }
 

@@ -61,6 +61,10 @@ class MerkleTree:
         self.nodes.append(node)
 
     @property
+    def transactions(self) -> List[Transaction]:
+        return [n.transaction for n in self.nodes]
+
+    @property
     def b64_hash(self) -> str:
         if len(self.nodes) == 0:
             return base64.b64encode(b'-').decode()

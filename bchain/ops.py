@@ -45,10 +45,30 @@ def chain_info(
         block_limit: int = -1,
 ) -> None:
     c = chain.Chain.from_file(p_chain)
-    print('Chain length:', len(c.blocks))
+    c_verified = c.verify()
+    print('Chain length:', c.length)
     print('First block:', c.blocks[0].b64_hash)
-    print('Last block mined:', c.last_block.verify())
-    print('Chain valid:', c.verify())
+    print('Last block mined:', c.last_block.is_mined)
+    print('Chain valid:', c_verified)
+    if not c_verified:
+        print('Abort. Not valid')
+        return
+
+    # calculate stats over balances
+    if block_limit > 0:
+        c_limited = c.get_subchain(block_limit)
+    else:
+        c_limited = c
+    addresses = c_limited.addresses
+    print('\nStatistics over addresses. Length of subchain:', c_limited.length)
+    for address in addresses:
+        b, b_min, b_max = c_limited.calculate_balance(address)
+        if b == 0:
+            continue
+        print('\tBalance:', address)
+        print('\t\tCurrent:', b)
+        print('\t\tMin:', b_min)
+        print('\t\tMax:', b_max)
 
 
 def chain_mine(
@@ -59,7 +79,7 @@ def chain_mine(
     if not c.verify():
         print('Chain invalid!')
         return
-    if c.last_block.verify(check_pow=True):
+    if c.last_block.is_mined:
         print('Last block already mined!')
         return
     print('Loading wallet...')
@@ -98,6 +118,8 @@ def transaction_create(
     print('Signing transaction...')
     t.sign(w)
     print('Adding transaction to the chain...')
-    c.add_transaction(t)
+    if not c.add_transaction(t):
+        print('Abort')
+        return
     c.to_file(p_chain)
     print('Done!')

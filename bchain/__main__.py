@@ -26,8 +26,8 @@ if __name__ == '__main__':
     chain_info_parser = chain_subparsers.add_parser(name='info', help='Get blockchain info')
     chain_info_parser.add_argument('--chain', help='Path to chain file',
                                    default='chain.json', required=False)
-    chain_parser.add_argument('--block-limit', type=int, default=-1, required=False,
-                              help='Number of first blocks to check (-1 to check all)')
+    chain_info_parser.add_argument('--block-limit', type=int, default=-1, required=False,
+                                   help='Number of first blocks to check (-1 to check all)')
     chain_mine_parser = chain_subparsers.add_parser(name='mine', help='Mine new block')
     chain_mine_parser.add_argument('--chain', help='Path to chain file',
                                    default='chain.json', required=False)
@@ -43,7 +43,6 @@ if __name__ == '__main__':
                                            default='chain.json', required=False)
     transaction_create_parser.add_argument('--receiver', help='Public address of receiver',)
     transaction_create_parser.add_argument('--amount', type=int, help='Amount to send',)
-
 
     args = parser.parse_args()
 

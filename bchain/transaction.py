@@ -17,12 +17,18 @@ class Transaction:
             str_sender_pk: Optional[str] = None,
             timestamp: Optional[int] = None,
     ) -> None:
+        assert amount > 0
+
         self.b64_sender = b64_sender
         self.b64_receiver = b64_receiver
-        self.amount = amount
+        self._amount = amount
         self.b64_signature = b64_signature
         self.str_sender_pk = str_sender_pk
         self.timestamp = timestamp if timestamp is not None else datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    @property
+    def amount(self) -> int:
+        return self._amount
 
     @property
     def signable_str(self) -> str:
@@ -45,4 +51,8 @@ class Transaction:
     def verify_signature(self) -> bool:
         if not self.is_signed:
             return False
-        return rsa.verify(self.signable_str.encode(), base64.b64decode(self.b64_signature.encode()), self.sender_pk)
+        try:
+            rsa.verify(self.signable_str.encode(), base64.b64decode(self.b64_signature.encode()), self.sender_pk)
+            return True
+        except rsa.VerificationError:
+            return False
