@@ -1,0 +1,5 @@
+/.venv
+/chain.json
+/wallet.wal
+/jennifer.wal
+/.idea
