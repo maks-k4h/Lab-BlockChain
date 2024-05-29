@@ -29,7 +29,7 @@ class Chain:
                 return False
             if not block.verify():
                 return False
-            if (i != len(self.blocks) - 1) and block.is_mined:
+            if (i != len(self.blocks) - 1) and not block.is_mined:
                 return False
 
         return True
@@ -98,8 +98,8 @@ class Chain:
         # return balances: current, min, max
         # calculate balance based on verified transactions
         bal_cur = 0
-        bal_min = None
-        bal_max = None
+        bal_min = 0
+        bal_max = 0
 
         for block in self.blocks:
             if omit_unverified and not block.is_mined:  # unverified transactions
@@ -111,9 +111,6 @@ class Chain:
                     bal_cur -= transaction.amount
                 if transaction.b64_receiver == b64_address:
                     bal_cur += transaction.amount
-                if bal_min is None:
-                    bal_min = bal_cur
-                    bal_max = bal_cur
                 bal_min = min(bal_min, bal_cur)
                 bal_max = max(bal_max, bal_cur)
 
